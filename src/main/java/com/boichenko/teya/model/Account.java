@@ -49,4 +49,33 @@ public class Account {
     public BigDecimal balance() {
         return balance;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Account account = (Account) o;
+
+        if (!user.equals(account.user)) return false;
+        if (!transactions.equals(account.transactions)) return false;
+        return balance.equals(account.balance);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = user.hashCode();
+        result = 31 * result + transactions.hashCode();
+        result = 31 * result + balance.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "user=" + user +
+                ", transactions=" + transactions +
+                ", balance=" + balance +
+                '}';
+    }
 }
