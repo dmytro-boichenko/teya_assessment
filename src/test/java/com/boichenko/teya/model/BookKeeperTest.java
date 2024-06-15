@@ -2,6 +2,8 @@ package com.boichenko.teya.model;
 
 import com.boichenko.teya.model.exception.NegativeOrZeroTransactionAmountException;
 import com.boichenko.teya.model.exception.NotEnoughMoneyException;
+import com.boichenko.teya.model.exception.UserExistsException;
+import com.boichenko.teya.model.exception.UserNotExistsException;
 import com.boichenko.teya.model.transaction.In;
 import com.boichenko.teya.model.transaction.Out;
 import com.boichenko.teya.model.transaction.P2P;
@@ -23,6 +25,26 @@ class BookKeeperTest {
 
         Account account = bookKeeper.account(userId);
         assertEquals(new Account(userId), account);
+    }
+
+    @Test
+    void failure_AddTransaction_SameUser() {
+        BookKeeper bookKeeper = new BookKeeper();
+
+        UserID userId = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userId);
+
+        assertThrows(UserExistsException.class, () -> bookKeeper.registerUser("john", "doe"));
+    }
+
+    @Test
+    void failure_UserNotFound() {
+        BookKeeper bookKeeper = new BookKeeper();
+
+        UserID userId = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userId);
+
+        assertThrows(UserNotExistsException.class, () -> bookKeeper.account(new UserID(2)));
     }
 
     @Test
