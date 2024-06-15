@@ -8,17 +8,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Account {
-    private final User user;
+    private final UserID user;
     private final List<Transaction> transactions;
     private BigDecimal balance;
 
-    public Account(User user) {
+    public Account(UserID user) {
         this.user = user;
         this.transactions = new LinkedList<>();
         this.balance = BigDecimal.ZERO;
     }
 
-    public BigDecimal addTransaction(Transaction t) {
+    public void addTransaction(Transaction t) {
         transactions.add(t);
 
         switch (t.type()) {
@@ -34,13 +34,8 @@ public class Account {
                 }
             }
         }
-
-        return this.balance;
     }
 
-    public User user() {
-        return user;
-    }
 
     public List<Transaction> transactions() {
         return transactions;

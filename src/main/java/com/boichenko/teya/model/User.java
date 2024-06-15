@@ -1,7 +1,5 @@
 package com.boichenko.teya.model;
 
-import java.util.Objects;
-
 public class User {
 
     private final String firstName;
@@ -12,16 +10,6 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
     }
-
-
-    public String firstName() {
-        return firstName;
-    }
-
-    public String lastName() {
-        return lastName;
-    }
-
 
     @Override
     public boolean equals(Object o) {
