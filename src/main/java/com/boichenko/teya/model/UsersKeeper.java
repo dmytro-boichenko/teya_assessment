@@ -35,11 +35,11 @@ public class UsersKeeper {
     public void activateUser(UserID userID) {
         User user = usersMap.get(userID);
         if (user == null) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(userID);
         }
 
         if (user.isActive()) {
-            throw new UserActiveException();
+            throw new UserActiveException(userID);
         }
 
         user.setActive(true);
@@ -48,11 +48,11 @@ public class UsersKeeper {
     public void deactivateUser(UserID userID) {
         User user = usersMap.get(userID);
         if (user == null) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(userID);
         }
 
         if (!user.isActive()) {
-            throw new UserNotActiveException();
+            throw new UserNotActiveException(userID);
         }
 
         user.setActive(false);
@@ -61,7 +61,7 @@ public class UsersKeeper {
     public boolean isUserActive(UserID userID) {
         User user = usersMap.get(userID);
         if (user == null) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(userID);
         }
 
         return user.isActive();

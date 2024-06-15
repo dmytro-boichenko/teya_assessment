@@ -21,15 +21,15 @@ public class Account {
 
     public void addTransaction(Transaction t) {
         switch (t.type()) {
-            case IN -> addBalance(t.amount());
-            case OUT -> subtractBalance(t.amount());
+            case IN -> addBalance(this.userID, t.amount());
+            case OUT -> subtractBalance(this.userID, t.amount());
             case P2P -> {
                 P2P p2p = (P2P) t;
 
                 if (this.userID.equals(p2p.from())) {
-                    subtractBalance(t.amount());
+                    subtractBalance(p2p.from(), t.amount());
                 } else {
-                    addBalance(t.amount());
+                    addBalance(p2p.to(), t.amount());
                 }
             }
         }
@@ -75,18 +75,18 @@ public class Account {
                 '}';
     }
 
-    private void addBalance(BigDecimal amount) {
+    private void addBalance(UserID userID, BigDecimal amount) {
         BigDecimal b = this.balance.add(amount);
         if (BigDecimal.ZERO.compareTo(b) > 0) {
-            throw new NotEnoughMoneyException();
+            throw new NotEnoughMoneyException(userID);
         }
         this.balance = b;
     }
 
-    private void subtractBalance(BigDecimal amount) {
+    private void subtractBalance(UserID userID, BigDecimal amount) {
         BigDecimal b = this.balance.subtract(amount);
         if (BigDecimal.ZERO.compareTo(b) > 0) {
-            throw new NotEnoughMoneyException();
+            throw new NotEnoughMoneyException(userID);
         }
         this.balance = b;
     }

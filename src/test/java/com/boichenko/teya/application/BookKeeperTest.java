@@ -1,5 +1,7 @@
-package com.boichenko.teya.model;
+package com.boichenko.teya.application;
 
+import com.boichenko.teya.model.Account;
+import com.boichenko.teya.model.UserID;
 import com.boichenko.teya.model.exception.*;
 import com.boichenko.teya.model.transaction.In;
 import com.boichenko.teya.model.transaction.Out;

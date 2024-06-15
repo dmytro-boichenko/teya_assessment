@@ -1,16 +1,21 @@
-package com.boichenko.teya.model;
+package com.boichenko.teya.application;
 
+import com.boichenko.teya.model.Account;
+import com.boichenko.teya.model.UserID;
+import com.boichenko.teya.model.UsersKeeper;
 import com.boichenko.teya.model.exception.NegativeOrZeroTransactionAmountException;
 import com.boichenko.teya.model.exception.UserNotActiveException;
 import com.boichenko.teya.model.exception.UserNotFoundException;
 import com.boichenko.teya.model.transaction.P2P;
 import com.boichenko.teya.model.transaction.Transaction;
 import com.boichenko.teya.model.transaction.UserTransaction;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class BookKeeper {
 
     private final UsersKeeper usersKeeper;
@@ -38,7 +43,7 @@ public class BookKeeper {
     public Account account(UserID userID) {
         var account = accounts.get(userID);
         if (account == null) {
-            throw new UserNotFoundException();
+            throw new UserNotFoundException(userID);
         }
 
         return account;
@@ -68,7 +73,7 @@ public class BookKeeper {
 
     private Account activeUserAccount(UserID userID) {
         if (!usersKeeper.isUserActive(userID)) {
-            throw new UserNotActiveException();
+            throw new UserNotActiveException(userID);
         }
 
         return account(userID);
