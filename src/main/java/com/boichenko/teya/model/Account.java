@@ -1,5 +1,6 @@
 package com.boichenko.teya.model;
 
+import com.boichenko.teya.model.exception.NotEnoughMoneyException;
 import com.boichenko.teya.model.transaction.P2P;
 import com.boichenko.teya.model.transaction.Transaction;
 
@@ -19,21 +20,21 @@ public class Account {
     }
 
     public void addTransaction(Transaction t) {
-        transactions.add(t);
-
         switch (t.type()) {
-            case IN -> this.balance = this.balance.add(t.amount());
-            case OUT -> this.balance = this.balance.subtract(t.amount());
+            case IN -> addBalance(t.amount());
+            case OUT -> subtractBalance(t.amount());
             case P2P -> {
                 P2P p2p = (P2P) t;
 
                 if (this.user.equals(p2p.from())) {
-                    this.balance = this.balance.subtract(t.amount());
+                    subtractBalance(t.amount());
                 } else {
-                    this.balance = this.balance.add(t.amount());
+                    addBalance(t.amount());
                 }
             }
         }
+
+        transactions.add(t);
     }
 
 
@@ -72,5 +73,21 @@ public class Account {
                 ", transactions=" + transactions +
                 ", balance=" + balance +
                 '}';
+    }
+
+    private void addBalance(BigDecimal amount) {
+        BigDecimal b = this.balance.add(amount);
+        if (BigDecimal.ZERO.compareTo(b) > 0) {
+            throw new NotEnoughMoneyException();
+        }
+        this.balance = b;
+    }
+
+    private void subtractBalance(BigDecimal amount) {
+        BigDecimal b = this.balance.subtract(amount);
+        if (BigDecimal.ZERO.compareTo(b) > 0) {
+            throw new NotEnoughMoneyException();
+        }
+        this.balance = b;
     }
 }

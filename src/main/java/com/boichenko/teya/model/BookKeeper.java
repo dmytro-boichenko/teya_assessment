@@ -1,11 +1,13 @@
 package com.boichenko.teya.model;
 
+import com.boichenko.teya.model.exception.NegativeOrZeroTransactionAmountException;
 import com.boichenko.teya.model.exception.UserExistsException;
 import com.boichenko.teya.model.exception.UserNotExistsException;
 import com.boichenko.teya.model.transaction.P2P;
 import com.boichenko.teya.model.transaction.Transaction;
 import com.boichenko.teya.model.transaction.UserTransaction;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,6 +46,10 @@ public class BookKeeper {
     }
 
     public void saveTransaction(Transaction t) {
+        if (BigDecimal.ZERO.compareTo(t.amount()) >= 0) {
+            throw new NegativeOrZeroTransactionAmountException();
+        }
+
         switch (t.type()) {
             case IN, OUT -> {
                 UserTransaction userTransaction = (UserTransaction) t;
