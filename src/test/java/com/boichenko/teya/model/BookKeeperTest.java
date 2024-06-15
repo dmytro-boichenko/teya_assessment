@@ -1,9 +1,6 @@
 package com.boichenko.teya.model;
 
-import com.boichenko.teya.model.exception.NegativeOrZeroTransactionAmountException;
-import com.boichenko.teya.model.exception.NotEnoughMoneyException;
-import com.boichenko.teya.model.exception.UserExistsException;
-import com.boichenko.teya.model.exception.UserNotExistsException;
+import com.boichenko.teya.model.exception.*;
 import com.boichenko.teya.model.transaction.In;
 import com.boichenko.teya.model.transaction.Out;
 import com.boichenko.teya.model.transaction.P2P;
@@ -20,62 +17,108 @@ class BookKeeperTest {
     void success_AddTransaction_EmptyUser() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        Account account = bookKeeper.account(userId);
-        assertEquals(new Account(userId), account);
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
     }
 
     @Test
     void failure_AddTransaction_SameUser() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        assertThrows(UserExistsException.class, () -> bookKeeper.registerUser("john", "doe"));
+        assertThrows(UserAlreadyRegisteredException.class, () -> bookKeeper.registerUser("john", "doe"));
     }
 
     @Test
     void failure_UserNotFound() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        assertThrows(UserNotExistsException.class, () -> bookKeeper.account(new UserID(2)));
+        assertThrows(UserNotFoundException.class, () -> bookKeeper.account(new UserID(2)));
     }
 
     @Test
     void success_AddTransaction_Single() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        Account account = bookKeeper.account(userId);
-        assertEquals(new Account(userId), account);
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
 
         BigDecimal amount = new BigDecimal("12.34");
-        bookKeeper.saveTransaction(new In(userId, amount));
+        bookKeeper.saveTransaction(new In(userID, amount));
         assertEquals(amount, account.balance());
-        assertIterableEquals(List.of(new In(userId, amount)), account.transactions());
+        assertIterableEquals(List.of(new In(userID, amount)), account.transactions());
+    }
+
+    @Test
+    void failure_AddTransaction_UserNotActive() {
+        BookKeeper bookKeeper = new BookKeeper();
+
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
+
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
+
+        bookKeeper.deactivateUser(userID);
+
+        BigDecimal amount = new BigDecimal("12.34");
+        assertThrows(UserNotActiveException.class,
+                () -> bookKeeper.saveTransaction(new In(userID, amount))
+        );
+        assertEquals(0, BigDecimal.ZERO.compareTo(account.balance()));
+        assertIterableEquals(List.of(), account.transactions());
+    }
+
+    @Test
+    void success_AddTransaction_UserReactivated() {
+        BookKeeper bookKeeper = new BookKeeper();
+
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
+
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
+
+        bookKeeper.deactivateUser(userID);
+
+        BigDecimal amount = new BigDecimal("12.34");
+        assertThrows(UserNotActiveException.class,
+                () -> bookKeeper.saveTransaction(new In(userID, amount))
+        );
+        assertEquals(0, BigDecimal.ZERO.compareTo(account.balance()));
+        assertIterableEquals(List.of(), account.transactions());
+
+        bookKeeper.activateUser(userID);
+
+        bookKeeper.saveTransaction(new In(userID, amount));
+        assertEquals(amount, account.balance());
+        assertIterableEquals(List.of(new In(userID, amount)), account.transactions());
     }
 
     @Test
     void failure_AddTransaction_Single_NegativeTopUp() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        Account account = bookKeeper.account(userId);
-        assertEquals(new Account(userId), account);
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
 
         BigDecimal amount = new BigDecimal("-12.34");
         assertThrows(NegativeOrZeroTransactionAmountException.class,
-                () -> bookKeeper.saveTransaction(new In(userId, amount))
+                () -> bookKeeper.saveTransaction(new In(userID, amount))
         );
         assertEquals(0, BigDecimal.ZERO.compareTo(account.balance()));
         assertIterableEquals(List.of(), account.transactions());
@@ -85,25 +128,25 @@ class BookKeeperTest {
     void success_AddTransaction_Two() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        Account account = bookKeeper.account(userId);
-        assertEquals(new Account(userId), account);
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
 
         BigDecimal amount1 = new BigDecimal("23.45");
-        bookKeeper.saveTransaction(new In(userId, amount1));
+        bookKeeper.saveTransaction(new In(userID, amount1));
         assertEquals(amount1, account.balance());
         assertIterableEquals(
-                List.of(new In(userId, amount1)),
+                List.of(new In(userID, amount1)),
                 account.transactions()
         );
 
         BigDecimal amount2 = new BigDecimal("12.34");
-        bookKeeper.saveTransaction(new Out(userId, amount2));
+        bookKeeper.saveTransaction(new Out(userID, amount2));
         assertEquals(amount1.subtract(amount2), account.balance());
         assertIterableEquals(
-                List.of(new In(userId, amount1), new Out(userId, amount2)),
+                List.of(new In(userID, amount1), new Out(userID, amount2)),
                 account.transactions()
         );
     }
@@ -112,24 +155,24 @@ class BookKeeperTest {
     void success_AddTransaction_Two_Zero() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        Account account = bookKeeper.account(userId);
-        assertEquals(new Account(userId), account);
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
 
         BigDecimal amount = new BigDecimal("12.34");
-        bookKeeper.saveTransaction(new In(userId, amount));
+        bookKeeper.saveTransaction(new In(userID, amount));
         assertEquals(amount, account.balance());
         assertIterableEquals(
-                List.of(new In(userId, amount)),
+                List.of(new In(userID, amount)),
                 account.transactions()
         );
 
-        bookKeeper.saveTransaction(new Out(userId, amount));
+        bookKeeper.saveTransaction(new Out(userID, amount));
         assertEquals(0, BigDecimal.ZERO.compareTo(account.balance()));
         assertIterableEquals(
-                List.of(new In(userId, amount), new Out(userId, amount)),
+                List.of(new In(userID, amount), new Out(userID, amount)),
                 account.transactions()
         );
     }
@@ -138,23 +181,23 @@ class BookKeeperTest {
     void failure_AddTransaction_Two_NotEnoughBalance() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId);
+        UserID userID = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID);
 
-        Account account = bookKeeper.account(userId);
-        assertEquals(new Account(userId), account);
+        Account account = bookKeeper.account(userID);
+        assertEquals(new Account(userID), account);
 
         BigDecimal amount1 = new BigDecimal("12.34");
-        bookKeeper.saveTransaction(new In(userId, amount1));
+        bookKeeper.saveTransaction(new In(userID, amount1));
         assertEquals(amount1, account.balance());
         assertIterableEquals(
-                List.of(new In(userId, amount1)),
+                List.of(new In(userID, amount1)),
                 account.transactions()
         );
 
         BigDecimal amount2 = new BigDecimal("23.45");
         assertThrows(NotEnoughMoneyException.class,
-                () -> bookKeeper.saveTransaction(new Out(userId, amount2))
+                () -> bookKeeper.saveTransaction(new Out(userID, amount2))
         );
     }
 
@@ -162,36 +205,36 @@ class BookKeeperTest {
     void success_AddTransaction_P2P() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId1 = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId1);
-        Account account1 = bookKeeper.account(userId1);
-        assertEquals(new Account(userId1), account1);
+        UserID userID1 = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID1);
+        Account account1 = bookKeeper.account(userID1);
+        assertEquals(new Account(userID1), account1);
 
-        UserID userId2 = bookKeeper.registerUser("jane", "doe");
-        assertEquals(new UserID(2), userId2);
-        Account account2 = bookKeeper.account(userId2);
-        assertEquals(new Account(userId2), account2);
+        UserID userID2 = bookKeeper.registerUser("jane", "doe");
+        assertEquals(new UserID(2), userID2);
+        Account account2 = bookKeeper.account(userID2);
+        assertEquals(new Account(userID2), account2);
 
 
         BigDecimal amount1 = new BigDecimal("23.45");
-        bookKeeper.saveTransaction(new In(userId1, amount1));
+        bookKeeper.saveTransaction(new In(userID1, amount1));
         assertEquals(amount1, account1.balance());
         assertIterableEquals(
-                List.of(new In(userId1, amount1)),
+                List.of(new In(userID1, amount1)),
                 account1.transactions()
         );
 
         BigDecimal amount2 = new BigDecimal("12.34");
-        bookKeeper.saveTransaction(new P2P(userId1, userId2, amount2));
+        bookKeeper.saveTransaction(new P2P(userID1, userID2, amount2));
         assertEquals(amount1.subtract(amount2), account1.balance());
         assertIterableEquals(
-                List.of(new In(userId1, amount1), new P2P(userId1, userId2, amount2)),
+                List.of(new In(userID1, amount1), new P2P(userID1, userID2, amount2)),
                 account1.transactions()
         );
 
         assertEquals(amount2, account2.balance());
         assertIterableEquals(
-                List.of(new P2P(userId1, userId2, amount2)),
+                List.of(new P2P(userID1, userID2, amount2)),
                 account2.transactions()
         );
     }
@@ -200,34 +243,76 @@ class BookKeeperTest {
     void failure_AddTransaction_P2P_NotEnoughMoney() {
         BookKeeper bookKeeper = new BookKeeper();
 
-        UserID userId1 = bookKeeper.registerUser("john", "doe");
-        assertEquals(new UserID(1), userId1);
-        Account account1 = bookKeeper.account(userId1);
-        assertEquals(new Account(userId1), account1);
+        UserID userID1 = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID1);
+        Account account1 = bookKeeper.account(userID1);
+        assertEquals(new Account(userID1), account1);
 
-        UserID userId2 = bookKeeper.registerUser("jane", "doe");
-        assertEquals(new UserID(2), userId2);
-        Account account2 = bookKeeper.account(userId2);
-        assertEquals(new Account(userId2), account2);
+        UserID userID2 = bookKeeper.registerUser("jane", "doe");
+        assertEquals(new UserID(2), userID2);
+        Account account2 = bookKeeper.account(userID2);
+        assertEquals(new Account(userID2), account2);
 
 
         BigDecimal amount1 = new BigDecimal("12.34");
-        bookKeeper.saveTransaction(new In(userId1, amount1));
+        bookKeeper.saveTransaction(new In(userID1, amount1));
         assertEquals(amount1, account1.balance());
         assertIterableEquals(
-                List.of(new In(userId1, amount1)),
+                List.of(new In(userID1, amount1)),
                 account1.transactions()
         );
 
         BigDecimal amount2 = new BigDecimal("23.45");
 
         assertThrows(NotEnoughMoneyException.class,
-                () -> bookKeeper.saveTransaction(new P2P(userId1, userId2, amount2))
+                () -> bookKeeper.saveTransaction(new P2P(userID1, userID2, amount2))
         );
 
         assertEquals(amount1, account1.balance());
         assertIterableEquals(
-                List.of(new In(userId1, amount1)),
+                List.of(new In(userID1, amount1)),
+                account1.transactions()
+        );
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(account2.balance()));
+        assertIterableEquals(
+                List.of(),
+                account2.transactions()
+        );
+    }
+
+    @Test
+    void failure_AddTransaction_P2P_OneUserNotActive() {
+        BookKeeper bookKeeper = new BookKeeper();
+
+        UserID userID1 = bookKeeper.registerUser("john", "doe");
+        assertEquals(new UserID(1), userID1);
+        Account account1 = bookKeeper.account(userID1);
+        assertEquals(new Account(userID1), account1);
+
+        UserID userID2 = bookKeeper.registerUser("jane", "doe");
+        assertEquals(new UserID(2), userID2);
+        Account account2 = bookKeeper.account(userID2);
+        assertEquals(new Account(userID2), account2);
+
+
+        BigDecimal amount1 = new BigDecimal("23.45");
+        bookKeeper.saveTransaction(new In(userID1, amount1));
+        assertEquals(amount1, account1.balance());
+        assertIterableEquals(
+                List.of(new In(userID1, amount1)),
+                account1.transactions()
+        );
+
+        bookKeeper.deactivateUser(userID2);
+
+        BigDecimal amount2 = new BigDecimal("12.34");
+        assertThrows(UserNotActiveException.class,
+                () -> bookKeeper.saveTransaction(new P2P(userID1, userID2, amount2))
+        );
+        assertEquals(amount1, account1.balance());
+        assertIterableEquals(
+                List.of(new In(userID1, amount1)),
                 account1.transactions()
         );
 
@@ -238,3 +323,4 @@ class BookKeeperTest {
         );
     }
 }
+

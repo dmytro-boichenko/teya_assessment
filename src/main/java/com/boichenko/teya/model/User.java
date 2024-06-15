@@ -4,10 +4,20 @@ public class User {
 
     private final String firstName;
     private final String lastName;
+    private boolean active;
 
     public User(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.active = true;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override
@@ -33,6 +43,7 @@ public class User {
         return "User{" +
                 "firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", active=" + active +
                 '}';
     }
 }

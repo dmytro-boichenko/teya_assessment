@@ -9,12 +9,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Account {
-    private final UserID user;
+    private final UserID userID;
     private final List<Transaction> transactions;
     private BigDecimal balance;
 
-    public Account(UserID user) {
-        this.user = user;
+    public Account(UserID userID) {
+        this.userID = userID;
         this.transactions = new LinkedList<>();
         this.balance = BigDecimal.ZERO;
     }
@@ -26,7 +26,7 @@ public class Account {
             case P2P -> {
                 P2P p2p = (P2P) t;
 
-                if (this.user.equals(p2p.from())) {
+                if (this.userID.equals(p2p.from())) {
                     subtractBalance(t.amount());
                 } else {
                     addBalance(t.amount());
@@ -53,14 +53,14 @@ public class Account {
 
         Account account = (Account) o;
 
-        if (!user.equals(account.user)) return false;
+        if (!userID.equals(account.userID)) return false;
         if (!transactions.equals(account.transactions)) return false;
         return balance.equals(account.balance);
     }
 
     @Override
     public int hashCode() {
-        int result = user.hashCode();
+        int result = userID.hashCode();
         result = 31 * result + transactions.hashCode();
         result = 31 * result + balance.hashCode();
         return result;
@@ -69,7 +69,7 @@ public class Account {
     @Override
     public String toString() {
         return "Account{" +
-                "user=" + user +
+                "user=" + userID +
                 ", transactions=" + transactions +
                 ", balance=" + balance +
                 '}';

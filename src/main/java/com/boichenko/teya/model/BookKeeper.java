@@ -1,45 +1,44 @@
 package com.boichenko.teya.model;
 
 import com.boichenko.teya.model.exception.NegativeOrZeroTransactionAmountException;
-import com.boichenko.teya.model.exception.UserExistsException;
-import com.boichenko.teya.model.exception.UserNotExistsException;
+import com.boichenko.teya.model.exception.UserNotActiveException;
+import com.boichenko.teya.model.exception.UserNotFoundException;
 import com.boichenko.teya.model.transaction.P2P;
 import com.boichenko.teya.model.transaction.Transaction;
 import com.boichenko.teya.model.transaction.UserTransaction;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class BookKeeper {
 
-    private final Map<User, UserID> users;
+    private final UsersKeeper usersKeeper;
     private final Map<UserID, Account> accounts;
-    private final AtomicInteger usersCount;
 
     public BookKeeper() {
-        this.users = new ConcurrentHashMap<>();
-        this.accounts = new ConcurrentHashMap<>();
-        this.usersCount = new AtomicInteger();
+        this.usersKeeper = new UsersKeeper();
+        this.accounts = new HashMap<>();
     }
 
     public UserID registerUser(String firstName, String lastName) {
-        if (users.containsKey(new User(firstName, lastName))) {
-            throw new UserExistsException();
-        }
-
-        UserID userId = new UserID(this.usersCount.addAndGet(1));
-        users.put(new User(firstName, lastName), userId);
-        accounts.put(userId, new Account(userId));
-
-        return userId;
+        UserID userID = usersKeeper.registerUser(firstName, lastName);
+        accounts.put(userID, new Account(userID));
+        return userID;
     }
 
-    public Account account(UserID userId) {
-        var account = accounts.get(userId);
+    public void activateUser(UserID userID) {
+        usersKeeper.activateUser(userID);
+    }
+
+    public void deactivateUser(UserID userID) {
+        usersKeeper.deactivateUser(userID);
+    }
+
+    public Account account(UserID userID) {
+        var account = accounts.get(userID);
         if (account == null) {
-            throw new UserNotExistsException();
+            throw new UserNotFoundException();
         }
 
         return account;
@@ -53,17 +52,26 @@ public class BookKeeper {
         switch (t.type()) {
             case IN, OUT -> {
                 UserTransaction userTransaction = (UserTransaction) t;
-                Account account = account(userTransaction.userId());
+                Account account = activeUserAccount(userTransaction.userId());
                 account.addTransaction(t);
             }
             case P2P -> {
                 P2P p2p = (P2P) t;
-                Account from = account(p2p.from());
-                from.addTransaction(t);
+                Account from = activeUserAccount(p2p.from());
+                Account to = activeUserAccount(p2p.to());
 
-                Account to = account(p2p.to());
+                from.addTransaction(t);
                 to.addTransaction(t);
             }
         }
     }
+
+    private Account activeUserAccount(UserID userID) {
+        if (!usersKeeper.isUserActive(userID)) {
+            throw new UserNotActiveException();
+        }
+
+        return account(userID);
+    }
+
 }
