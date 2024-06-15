@@ -12,6 +12,14 @@ public class User {
         this.active = true;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
     public boolean isActive() {
         return active;
     }

@@ -1,6 +1,7 @@
 package com.boichenko.teya.application;
 
 import com.boichenko.teya.model.Account;
+import com.boichenko.teya.model.User;
 import com.boichenko.teya.model.UserID;
 import com.boichenko.teya.model.UsersKeeper;
 import com.boichenko.teya.model.exception.NegativeOrZeroTransactionAmountException;
@@ -38,6 +39,10 @@ public class BookKeeper {
 
     public void deactivateUser(UserID userID) {
         usersKeeper.deactivateUser(userID);
+    }
+
+    public User user(UserID userID) {
+        return usersKeeper.getUser(userID);
     }
 
     public Account account(UserID userID) {

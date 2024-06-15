@@ -32,11 +32,17 @@ public class UsersKeeper {
         return userId;
     }
 
-    public void activateUser(UserID userID) {
+    public User getUser(UserID userID) {
         User user = usersMap.get(userID);
         if (user == null) {
             throw new UserNotFoundException(userID);
         }
+
+        return user;
+    }
+
+    public void activateUser(UserID userID) {
+        User user = getUser(userID);
 
         if (user.isActive()) {
             throw new UserActiveException(userID);
@@ -46,10 +52,7 @@ public class UsersKeeper {
     }
 
     public void deactivateUser(UserID userID) {
-        User user = usersMap.get(userID);
-        if (user == null) {
-            throw new UserNotFoundException(userID);
-        }
+        User user = getUser(userID);
 
         if (!user.isActive()) {
             throw new UserNotActiveException(userID);
@@ -59,11 +62,6 @@ public class UsersKeeper {
     }
 
     public boolean isUserActive(UserID userID) {
-        User user = usersMap.get(userID);
-        if (user == null) {
-            throw new UserNotFoundException(userID);
-        }
-
-        return user.isActive();
+        return getUser(userID).isActive();
     }
 }
