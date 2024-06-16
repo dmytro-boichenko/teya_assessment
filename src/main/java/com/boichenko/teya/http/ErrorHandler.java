@@ -1,17 +1,14 @@
 package com.boichenko.teya.http;
 
 import com.boichenko.teya.http.model.Error;
-import com.boichenko.teya.model.exception.UserActiveException;
-import com.boichenko.teya.model.exception.UserAlreadyRegisteredException;
-import com.boichenko.teya.model.exception.UserNotActiveException;
-import com.boichenko.teya.model.exception.UserNotFoundException;
+import com.boichenko.teya.model.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
-public class UserErrorHandler {
+public class ErrorHandler {
 
     @ExceptionHandler(UserNotActiveException.class)
     public ResponseEntity<Error> handleUserNotActiveException(UserNotActiveException ex) {
@@ -31,5 +28,20 @@ public class UserErrorHandler {
     @ExceptionHandler(UserAlreadyRegisteredException.class)
     public ResponseEntity<Error> handleUserAlreadyRegisteredException() {
         return ResponseEntity.badRequest().body(new Error("user with such first and last names already registered"));
+    }
+
+    @ExceptionHandler(NegativeOrZeroTransactionAmountException.class)
+    public ResponseEntity<Error> handleNegativeOrZeroTransactionAmountException() {
+        return new ResponseEntity<>(new Error("transaction amount is negative or zero"), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NotEnoughMoneyException.class)
+    public ResponseEntity<Error> handleNotEnoughMoneyException(NotEnoughMoneyException ex) {
+        return new ResponseEntity<>(new Error("user " + ex.userID() + " doesn't have enough money for making transaction"), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<Error> handleNumberFormatException(NumberFormatException ex) {
+        return new ResponseEntity<>(new Error(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }

@@ -3,10 +3,13 @@ package com.boichenko.teya.http;
 import com.boichenko.teya.application.BookKeeper;
 import com.boichenko.teya.http.model.*;
 import com.boichenko.teya.model.UserID;
+import com.boichenko.teya.model.transaction.In;
+import com.boichenko.teya.model.transaction.Out;
 import com.boichenko.teya.model.transaction.P2P;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -80,6 +83,25 @@ public class UserController {
     @RequestMapping(value = "/{id}/deactivate", method = RequestMethod.PUT)
     public void deactivateUser(@PathVariable("id") int id) {
         bookKeeper.deactivateUser(new UserID(id));
+    }
+
+    @RequestMapping(value = "/{id}/topup", method = RequestMethod.POST)
+    public void accountTopUp(@PathVariable("id") int id, @RequestBody UserTransaction t) {
+        bookKeeper.saveTransaction(new In(new UserID(id), new BigDecimal(t.amount())));
+    }
+
+    @RequestMapping(value = "/{id}/withdraw", method = RequestMethod.POST)
+    public void accountWithdraw(@PathVariable("id") int id, @RequestBody UserTransaction t) {
+        bookKeeper.saveTransaction(new Out(new UserID(id), new BigDecimal(t.amount())));
+    }
+
+    @RequestMapping(value = "/{id}/p2p", method = RequestMethod.POST)
+    public void accountP2P(@PathVariable("id") int id, @RequestBody P2PTransaction t) {
+        bookKeeper.saveTransaction(new P2P(
+                new UserID(id),
+                new UserID(t.toUserID()),
+                new BigDecimal(t.amount())
+        ));
     }
 
 }
