@@ -6,6 +6,7 @@ import com.boichenko.teya.model.UserID;
 import com.boichenko.teya.model.transaction.In;
 import com.boichenko.teya.model.transaction.Out;
 import com.boichenko.teya.model.transaction.P2P;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ public class UserController {
     @RequestMapping(value = "/create", method = RequestMethod.POST)
     public ResponseEntity<UserIdentity> registerUser(@RequestBody UserInfo userInfo) {
         UserID userID = bookKeeper.registerUser(userInfo.firstName(), userInfo.lastName());
-        return ResponseEntity.ok(new UserIdentity(userID.id()));
+        return new ResponseEntity<>(new UserIdentity(userID.id()), HttpStatus.CREATED);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
