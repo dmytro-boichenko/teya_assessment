@@ -1,6 +1,7 @@
 package com.boichenko.teya.http.model;
 
-public abstract class Transaction {
+public class Transaction {
+
     private final String type;
     private final String amount;
 
@@ -9,11 +10,11 @@ public abstract class Transaction {
         this.amount = amount;
     }
 
-    public String type() {
+    public String getType() {
         return type;
     }
 
-    public String amount() {
+    public String getAmount() {
         return amount;
     }
 }

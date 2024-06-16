@@ -47,18 +47,16 @@ public class UserController {
                     switch (t.type()) {
                         case IN, OUT -> {
                             com.boichenko.teya.model.transaction.UserTransaction ut = (com.boichenko.teya.model.transaction.UserTransaction) t;
-                            return new UserTransaction(
+                            return new Transaction(
                                     ut.type().name(),
-                                    ut.amount().toString(),
-                                    ut.userId().id()
+                                    ut.amount().toString()
                             );
                         }
                         case P2P -> {
                             P2P p2p = (P2P) t;
-                            return new P2PTransaction(
+                            return new TransactionToUser(
                                     p2p.type().name(),
                                     p2p.amount().toString(),
-                                    p2p.from().id(),
                                     p2p.to().id()
                             );
                         }
@@ -69,7 +67,6 @@ public class UserController {
 
         return ResponseEntity.ok(
                 new Account(
-                        account.userID().id(),
                         transactions,
                         account.balance().toString())
         );
@@ -86,21 +83,21 @@ public class UserController {
     }
 
     @RequestMapping(value = "/{id}/topup", method = RequestMethod.POST)
-    public void accountTopUp(@PathVariable("id") int id, @RequestBody UserTransaction t) {
-        bookKeeper.saveTransaction(new In(new UserID(id), new BigDecimal(t.amount())));
+    public void accountTopUp(@PathVariable("id") int id, @RequestBody Transaction t) {
+        bookKeeper.saveTransaction(new In(new UserID(id), new BigDecimal(t.getAmount())));
     }
 
     @RequestMapping(value = "/{id}/withdraw", method = RequestMethod.POST)
-    public void accountWithdraw(@PathVariable("id") int id, @RequestBody UserTransaction t) {
-        bookKeeper.saveTransaction(new Out(new UserID(id), new BigDecimal(t.amount())));
+    public void accountWithdraw(@PathVariable("id") int id, @RequestBody Transaction t) {
+        bookKeeper.saveTransaction(new Out(new UserID(id), new BigDecimal(t.getAmount())));
     }
 
     @RequestMapping(value = "/{id}/p2p", method = RequestMethod.POST)
-    public void accountP2P(@PathVariable("id") int id, @RequestBody P2PTransaction t) {
+    public void accountP2P(@PathVariable("id") int id, @RequestBody TransactionToUser t) {
         bookKeeper.saveTransaction(new P2P(
                 new UserID(id),
-                new UserID(t.toUserID()),
-                new BigDecimal(t.amount())
+                new UserID(t.getToUserID()),
+                new BigDecimal(t.getAmount())
         ));
     }
 
