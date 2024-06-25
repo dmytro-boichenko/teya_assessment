@@ -11,11 +11,9 @@ import java.util.Map;
 public class UsersKeeper {
 
     private final Map<UserID, User> usersMap;
-    private int usersCount;
 
     public UsersKeeper() {
         this.usersMap = new HashMap<>();
-        this.usersCount = 0;
     }
 
     public UserID registerUser(String firstName, String lastName) {
@@ -25,8 +23,8 @@ public class UsersKeeper {
             throw new UserAlreadyRegisteredException();
         }
 
-        this.usersCount++;
-        UserID userId = new UserID(this.usersCount);
+        int id = usersMap.size() + 1;
+        UserID userId = new UserID(id);
         usersMap.put(userId, user);
 
         return userId;
